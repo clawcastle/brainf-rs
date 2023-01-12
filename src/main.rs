@@ -30,18 +30,18 @@ impl<const N: usize> BrainfuckInterpreter<N> {
             match instruction {
                 Instruction::IncreasePointer => self.memory_pointer.add(1),
                 Instruction::DecreasePointer => self.memory_pointer.subtract(1),
-                Instruction::IncreaseValue => self.memory[self.memory_pointer.pointer] += 1,
-                Instruction::DecreaseValue => self.memory[self.memory_pointer.pointer] -= 1,
+                Instruction::IncreaseValue => self.memory[self.memory_pointer] += 1,
+                Instruction::DecreaseValue => self.memory[self.memory_pointer] -= 1,
                 Instruction::ReadChar => {
                     if let Some(Ok(c)) = std::io::stdin().bytes().next() {
-                        self.memory[self.memory_pointer.pointer] = c
+                        self.memory[self.memory_pointer] = c
                     } else {
                         panic!("Error occured while reading character from stdin.")
                     }
                 }
                 Instruction::WriteChar => {
                     if std::io::stdout()
-                        .write(&[self.memory[self.memory_pointer.pointer]])
+                        .write(&[self.memory[self.memory_pointer]])
                         .is_err()
                     {
                         panic!("Error occurred while writing to stdout.")
@@ -53,7 +53,7 @@ impl<const N: usize> BrainfuckInterpreter<N> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 struct MemoryPointer<const N: usize> {
     pointer: usize,
 }
@@ -73,6 +73,20 @@ impl<const N: usize> MemoryPointer<N> {
         } else {
             self.pointer = N - ((n & N) - self.pointer)
         }
+    }
+}
+
+impl<const N: usize> std::ops::Index<MemoryPointer<N>> for [u8; N] {
+    type Output = u8;
+
+    fn index(&self, memory_pointer: MemoryPointer<N>) -> &Self::Output {
+        &self[memory_pointer.pointer]
+    }
+}
+
+impl<const N: usize> std::ops::IndexMut<MemoryPointer<N>> for [u8; N] {
+    fn index_mut(&mut self, memory_pointer: MemoryPointer<N>) -> &mut Self::Output {
+        &mut self[memory_pointer.pointer]
     }
 }
 
